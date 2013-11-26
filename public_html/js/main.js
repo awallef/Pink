@@ -1,16 +1,24 @@
 var container;
 
-var camera, scene, renderer;
+var camera, scene, renderer, clock;
 
 var flamingo;
 
-init();
+var movePos = 0;
 
 
+
+var loader = new THREE.JSONLoader();
+loader.load("models/pink/flamingo.js" , function(geometry) {
+    
+    
+    createFlamingo(geometry);
+    init();
+    animate();
+
+});
 
 function createFlamingo(geometry) {
-    
-    alert('youpi!');
     
     if (geometry.morphColors && geometry.morphColors.length) {
 
@@ -26,34 +34,80 @@ function createFlamingo(geometry) {
     var material = new THREE.MeshLambertMaterial({color: 0xF38BD2, morphTargets: true, vertexColors: THREE.FaceColors});
 
     flamingo = new THREE.MorphAnimMesh(geometry, material);
-    flamingo.position.set(0, 0, 0);
-    flamingo.scale.set(1, 1, 1);
+    flamingo.position.set(0, 40, 0);
+    flamingo.scale.set(0.5, 0.5, 0.5);
 
     flamingo.speed = 500;
     flamingo.duration = 1000;
     flamingo.time = 600 * Math.random();
 
-    scene.add(flamingo);
-
-    preRender();
 }
 
-function preRender(){
+function init() {
+
+    container = document.getElementById('container');
+
+    // Camera
+    camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 4000);
+    camera.position.y = 100;
+    camera.position.z = 400;
     
-    //
+    // Scene
+    scene = new THREE.Scene();
+    
+    // Clock
+    var clock = new THREE.Clock;
+    
+    // Grid
+    var size = 140, step = 10;
 
-    var pointLight = new THREE.PointLight(0xffffff);
-    pointLight.position.set(200, 300, -400);
-    scene.add(pointLight);
+    var geometry = new THREE.Geometry();
+    var material = new THREE.LineBasicMaterial( { color: 0x303030 } );
 
-    //
+    for ( var i = - size; i <= size; i += step ) {
 
+            geometry.vertices.push( new THREE.Vector3( - size, - 0.04, i ) );
+            geometry.vertices.push( new THREE.Vector3(   size, - 0.04, i ) );
+
+            geometry.vertices.push( new THREE.Vector3( i, - 0.04, - size ) );
+            geometry.vertices.push( new THREE.Vector3( i, - 0.04,   size ) );
+
+    }
+
+    var line = new THREE.Line( geometry, material, THREE.LinePieces );
+    scene.add( line );
+    
+    // flamingo
+    scene.add(flamingo);
+
+    
+    
+    // Lights
+    //var particleLight = new THREE.Mesh( new THREE.SphereGeometry( 4, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) );
+    //scene.add( particleLight );
+    
+    scene.add( new THREE.AmbientLight( 0xcccccc ) );
+    
+    var directionalLight = new THREE.DirectionalLight(/*Math.random() * 0xffffff*/0xeeeeee );
+    directionalLight.position.x = Math.random() - 0.5;
+    directionalLight.position.y = Math.random() - 0.5;
+    directionalLight.position.z = Math.random() - 0.5;
+    directionalLight.position.normalize();
+    scene.add( directionalLight );
+
+    //var pointLight = new THREE.PointLight( 0xffffff, 4 );
+    //pointLight.position = particleLight.position;
+    //scene.add( pointLight );
+    
+    
+    
+    // RENDER ENGINE
     renderer = new THREE.WebGLRenderer({antialias: false, alpha: false});
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     renderer.gammaInput = true;
-    renderer.gammaOutput = true;
-    renderer.physicallyBasedShading = true;
+    //renderer.gammaOutput = true;
+    //renderer.physicallyBasedShading = true;
 
     container.appendChild(renderer.domElement);
 
@@ -61,27 +115,6 @@ function preRender(){
     //
 
     window.addEventListener('resize', onWindowResize, false);
-    
-    animate();
-}
-
-function init() {
-
-    container = document.getElementById('container');
-
-    //
-
-    camera = new THREE.PerspectiveCamera(27, window.innerWidth / window.innerHeight, 1, 4000);
-    camera.position.z = 400;
-
-    scene = new THREE.Scene();
-
-
-    var loader = new THREE.JSONLoader();
-    loader.load("models/pink/flamingo.js" , function(geometry) {
-        createFlamingo(geometry);
-    });
-
 
 }
 
@@ -97,15 +130,34 @@ function onWindowResize() {
 //
 
 function animate() {
-
-    requestAnimationFrame(animate);
-
+    requestAnimationFrame( animate );
     render();
 
 }
 
 function render() {
-
+    
+    camera.lookAt( scene.position );
     renderer.render(scene, camera);
 
 }
+
+window.onkeydown = function (e) {
+    
+    var code = e.keyCode ? e.keyCode : e.which;
+    
+    // a
+    if( code  == 65 ){
+        movePos++;
+        flamingo.updateAnimation( movePos );
+    } else if (code === 38) { //up key
+        flamingo.translateOnAxis( new THREE.Vector3( 0, 0, 1 ), 10 );
+    } else if (code === 40) { //down key
+        flamingo.translateOnAxis( new THREE.Vector3( 0, 0, 1 ), -10 );
+    }else if (code === 37) { //down key
+        flamingo.rotation.y--;
+    }else if (code === 39) { //down key
+        flamingo.rotation.y++;
+    }
+    
+};
