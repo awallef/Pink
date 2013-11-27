@@ -6,7 +6,9 @@ var flamingo;
 
 var movePos = 0;
 
+var stepAngle = Math.PI / 18;
 
+var speed = 1;
 
 var loader = new THREE.JSONLoader();
 loader.load("models/pink/flamingo.js" , function(geometry) {
@@ -137,7 +139,8 @@ function animate() {
 
 function render() {
     
-    camera.lookAt( scene.position );
+    flamingo.translateOnAxis( new THREE.Vector3( 0, 0, 1 ), speed / 10 );
+    camera.lookAt( flamingo.position );
     renderer.render(scene, camera);
 
 }
@@ -150,14 +153,17 @@ window.onkeydown = function (e) {
     if( code  == 65 ){
         movePos++;
         flamingo.updateAnimation( movePos );
+        speed += 0.2;
     } else if (code === 38) { //up key
-        flamingo.translateOnAxis( new THREE.Vector3( 0, 0, 1 ), 10 );
+        //flamingo.translateOnAxis( new THREE.Vector3( 0, 0, 1 ), 10 );
+        flamingo.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), stepAngle );
     } else if (code === 40) { //down key
-        flamingo.translateOnAxis( new THREE.Vector3( 0, 0, 1 ), -10 );
-    }else if (code === 37) { //down key
-        flamingo.rotation.y--;
-    }else if (code === 39) { //down key
-        flamingo.rotation.y++;
+        //flamingo.translateOnAxis( new THREE.Vector3( 0, 0, 1 ), -10 );
+        flamingo.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), -stepAngle );
+    }else if (code === 37) { //left key
+       flamingo.rotateOnAxis( new THREE.Vector3( 0, 0, 1 ), -stepAngle );
+    }else if (code === 39) { //right key
+       flamingo.rotateOnAxis( new THREE.Vector3( 0, 0, 1 ), stepAngle );
     }
     
 };
